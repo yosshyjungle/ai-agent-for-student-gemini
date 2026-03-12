@@ -22,12 +22,14 @@ const SYSTEM_PROMPT = `
 ・点数や成績評価はしない
 ・生徒を否定しない
 ・必ず励ます
+・過去の学習履歴を考慮して、継続的な成長をサポートする
 
 【対応手順】
-1. 理解度を ◎ / ○ / △ で判断
-2. 考え違いをやさしく説明
-3. 次の課題を1問出す
-4. 前向きな一言を添える
+1. 過去の学習履歴がある場合は、学習の進捗や傾向を把握する
+2. 理解度を ◎ / ○ / △ で判断
+3. 前回の学習内容との関連性を考慮して、考え違いをやさしく説明
+4. 過去の学習内容を踏まえて、適切な次の課題を1問出す
+5. 前向きな一言を添える
 
 出力形式：
 理解度：
@@ -36,6 +38,27 @@ AIコメント：
 `
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+
+// 過去の学習履歴を取得する関数
+async function getLearningHistory(userId: string, limit: number = 5) {
+    return await prisma.evaluation.findMany({
+        where: {
+            user_id: userId,
+        },
+        orderBy: {
+            created_at: "desc",
+        },
+        take: limit,
+        select: {
+            unit: true,
+            question: true,
+            understanding: true,
+            ai_comment: true,
+            next_task: true,
+            created_at: true,
+        },
+    })
+}
 
 // AI結果をパースする関数
 function parseAIResponse(content: string | null): {
@@ -76,7 +99,53 @@ export async function evaluateAnswer(data: {
     question: string
     answer: string
 }) {
+    // 過去の学習履歴を取得（最新5件）
+    const history = await getLearningHistory(data.user_id, 5)
+    const lastLearning = history.length > 0 ? history[0] : null
+
+    // 学習履歴のテキストを生成
+    let historyContext = ""
+    if (history.length > 0) {
+        historyContext = "\n【過去の学習履歴】\n"
+        history.slice(0, 3).forEach((item, index) => {
+            const date = new Date(item.created_at).toLocaleDateString("ja-JP")
+            historyContext += `${index + 1}. ${date} - ${item.unit || "科目不明"}\n`
+
+            if (item.understanding) {
+                historyContext += `   理解度: ${item.understanding}\n`
+            }
+
+            if (item.next_task) {
+                const taskPreview =
+                    item.next_task.length > 50
+                        ? item.next_task.substring(0, 50) + "..."
+                        : item.next_task
+
+                historyContext += `   次の課題: ${taskPreview}\n`
+            }
+        })
+    }
+
+    // 前回学習の詳細情報
+    let lastLearningContext = ""
+    if (lastLearning) {
+        lastLearningContext = `
+【前回の学習内容（参考）】
+・授業科目: ${lastLearning.unit || "なし"}
+・理解度: ${lastLearning.understanding || "なし"}
+・前回の次の課題: ${lastLearning.next_task || "なし"}
+・前回のAIコメント（要約）: ${lastLearning.ai_comment
+                ? lastLearning.ai_comment.length > 150
+                    ? lastLearning.ai_comment.substring(0, 150) + "..."
+                    : lastLearning.ai_comment
+                : "なし"
+            }
+`
+    }
+
     const prompt = `
+${historyContext}${lastLearningContext}
+【今回の学習内容】
 【授業科目】
 ${data.unit}
 
@@ -85,6 +154,8 @@ ${data.question}
 
 【生徒の解答】
 ${data.answer}
+
+${lastLearning ? "前回の学習内容との関連性や進捗を考慮して、継続的な成長をサポートする評価をしてください。" : ""}
 `
 
     // AI評価取得
