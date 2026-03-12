@@ -1,26 +1,39 @@
 @import "tailwindcss";
 
+/* 教育現場向け：落ち着いた配色 */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafbfc;
+  --foreground: #2c3e50;
+  --surface: #ffffff;
+  --border: #e8ecef;
+  --muted: #6b7c8d;
+  --primary: #3d6a8c;
+  --primary-hover: #2d5a7a;
+  --accent: #5a8f7b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-noto-sans-jp), "Hiragino Sans", sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1a1f26;
+    --foreground: #e8ecf0;
+    --surface: #242b33;
+    --border: #3a4550;
+    --muted: #9ca8b4;
+    --primary: #5a8fb8;
+    --primary-hover: #6ba3cc;
+    --accent: #6ba08a;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), "Hiragino Sans", "Noto Sans JP", sans-serif;
 }

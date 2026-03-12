@@ -2,6 +2,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { evaluateAnswer } from "../actions/evaluate"
 
 export default function StudentPage() {
@@ -35,40 +36,140 @@ export default function StudentPage() {
     }
 
     return (
-        <div style={{ maxWidth: 600, margin: "0 auto", padding: 20 }}>
-            <h1>今日の学習</h1>
-
-            <label>授業科目</label>
-            <input
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                style={{ width: "100%", marginBottom: 10 }}
-            />
-
-            <label>問題</label>
-            <textarea
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                style={{ width: "100%", height: 80, marginBottom: 10 }}
-            />
-
-            <label>自分の解答</label>
-            <textarea
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                style={{ width: "100%", height: 80, marginBottom: 20 }}
-            />
-
-            <button onClick={handleSubmit} disabled={loading}>
-                {loading ? "AIが確認中..." : "AIに確認してもらう"}
-            </button>
-
-            {result && (
-                <div style={{ marginTop: 30 }}>
-                    <h2>AIからのアドバイス</h2>
-                    <pre style={{ whiteSpace: "pre-wrap" }}>{result.aiResponse}</pre>
+        <div className="min-h-screen bg-[var(--background)]">
+            <header className="border-b border-[var(--border)] bg-[var(--surface)]">
+                <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-4">
+                    <Link
+                        href="/"
+                        className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+                    >
+                        ← トップへ
+                    </Link>
+                    <h1 className="text-lg font-semibold text-[var(--foreground)]">
+                        今日の学習
+                    </h1>
+                    <div className="w-16" />
                 </div>
-            )}
+            </header>
+
+            <main className="mx-auto max-w-2xl px-6 py-10">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault()
+                        handleSubmit()
+                    }}
+                    className="space-y-6"
+                >
+                    <div>
+                        <label
+                            htmlFor="unit"
+                            className="mb-1.5 block text-sm font-medium text-[var(--foreground)]"
+                        >
+                            授業科目
+                        </label>
+                        <input
+                            id="unit"
+                            type="text"
+                            value={unit}
+                            onChange={(e) => setUnit(e.target.value)}
+                            placeholder="例：数学・二次関数"
+                            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="question"
+                            className="mb-1.5 block text-sm font-medium text-[var(--foreground)]"
+                        >
+                            問題
+                        </label>
+                        <textarea
+                            id="question"
+                            value={question}
+                            onChange={(e) => setQuestion(e.target.value)}
+                            placeholder="問題文を入力してください"
+                            rows={4}
+                            className="w-full resize-none rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="answer"
+                            className="mb-1.5 block text-sm font-medium text-[var(--foreground)]"
+                        >
+                            自分の解答
+                        </label>
+                        <textarea
+                            id="answer"
+                            value={answer}
+                            onChange={(e) => setAnswer(e.target.value)}
+                            placeholder="解答を入力してください"
+                            rows={4}
+                            className="w-full resize-none rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full rounded-lg bg-[var(--primary)] py-3 font-medium text-white transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-60 disabled:pointer-events-none"
+                    >
+                        {loading ? "AIが確認中..." : "AIに確認してもらう"}
+                    </button>
+                </form>
+
+                {result && (
+                    <section className="mt-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6">
+                        <h2 className="mb-4 text-base font-semibold text-[var(--foreground)]">
+                            AIからのアドバイス
+                        </h2>
+
+                        {result.understanding && (
+                            <div className="mb-4">
+                                <span className="text-sm text-[var(--muted)]">
+                                    理解度：
+                                </span>
+                                <p className="mt-0.5 text-[var(--foreground)]">
+                                    {result.understanding}
+                                </p>
+                            </div>
+                        )}
+
+                        {result.aiComment && (
+                            <div className="mb-4">
+                                <span className="text-sm text-[var(--muted)]">
+                                    AIコメント：
+                                </span>
+                                <p className="mt-0.5 whitespace-pre-wrap text-[var(--foreground)]">
+                                    {result.aiComment}
+                                </p>
+                            </div>
+                        )}
+
+                        {result.nextTask && (
+                            <div>
+                                <span className="text-sm text-[var(--muted)]">
+                                    次の課題：
+                                </span>
+                                <p className="mt-0.5 whitespace-pre-wrap text-[var(--foreground)]">
+                                    {result.nextTask}
+                                </p>
+                            </div>
+                        )}
+
+                        {!result.understanding &&
+                            !result.aiComment &&
+                            !result.nextTask &&
+                            result.aiResponse && (
+                                <p className="whitespace-pre-wrap text-[var(--foreground)]">
+                                    {result.aiResponse}
+                                </p>
+                            )}
+                    </section>
+                )}
+            </main>
         </div>
     )
 }
