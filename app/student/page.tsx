@@ -5,10 +5,18 @@ import { useState } from "react"
 import { evaluateAnswer } from "../actions/evaluate"
 
 export default function StudentPage() {
+    const [userId] = useState("student-001") // 実際のアプリでは認証から取得
     const [unit, setUnit] = useState("")
     const [question, setQuestion] = useState("")
     const [answer, setAnswer] = useState("")
-    const [result, setResult] = useState<string | null>(null)
+    const [result, setResult] = useState<{
+        id: string
+        aiResponse: string | null
+        understanding: string | null
+        aiComment: string | null
+        nextTask: string | null
+        createdAt: Date
+    } | null>(null)
     const [loading, setLoading] = useState(false)
 
     const handleSubmit = async () => {
@@ -16,6 +24,7 @@ export default function StudentPage() {
         setResult(null)
 
         const res = await evaluateAnswer({
+            user_id: userId,
             unit,
             question,
             answer,
@@ -57,7 +66,7 @@ export default function StudentPage() {
             {result && (
                 <div style={{ marginTop: 30 }}>
                     <h2>AIからのアドバイス</h2>
-                    <pre style={{ whiteSpace: "pre-wrap" }}>{result}</pre>
+                    <pre style={{ whiteSpace: "pre-wrap" }}>{result.aiResponse}</pre>
                 </div>
             )}
         </div>
