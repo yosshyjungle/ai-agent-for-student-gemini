@@ -14,7 +14,7 @@ datasource db {
 
 model Evaluation {
   id             String   @id @default(uuid()) @db.Uuid
-  user_id        String?
+  user_id        String   @db.Uuid
   unit           String?
   question       String?
   student_answer String?  @map("student_answer")
@@ -23,5 +23,17 @@ model Evaluation {
   next_task      String?  @map("next_task")
   created_at     DateTime @default(now()) @db.Timestamptz
 
+  user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@map("evaluations")
+}
+
+model User {
+  id            String        @id @default(uuid()) @db.Uuid
+  clerk_user_id String        @unique
+  created_at    DateTime      @default(now()) @db.Timestamptz
+  updated_at    DateTime      @updatedAt @db.Timestamptz
+  evaluations   Evaluation[]
+
+  @@map("users")
 }
